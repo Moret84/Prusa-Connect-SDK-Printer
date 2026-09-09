@@ -653,3 +653,31 @@ def test_camera_register_loop(requests_mock, printer):
 
     req = requests_mock.request_history[0]
     assert (str(req) == f"POST {SERVER}/p/camera")
+
+
+AVAILABLE_RESOLUTIONS = {Resolution(640, 480), Resolution(1600, 1200)}
+
+
+def test_initial_resolution_honours_the_config():
+    """The stored resolution is a string, the available ones are objects"""
+    initial = CameraDriver._get_initial_resolution(
+        AVAILABLE_RESOLUTIONS, {"resolution": "640x480"})
+    assert initial == Resolution(640, 480)
+
+
+def test_initial_resolution_falls_back_to_the_highest():
+    """An unavailable, unparseable or missing resolution gives the highest"""
+    highest = Resolution(1600, 1200)
+    for config in ({"resolution": "800x600"}, {"resolution": "nonsense"},
+                   {"resolution": "1600"}, {}):
+        initial = CameraDriver._get_initial_resolution(
+            AVAILABLE_RESOLUTIONS, config)
+        assert initial == highest, config
+
+
+def test_resolution_from_string():
+    assert Resolution.from_string("1600x1200") == Resolution(1600, 1200)
+    assert str(Resolution.from_string("640x480")) == "640x480"
+    for text in ("nonsense", "1600", "", "1600x"):
+        with pytest.raises(ValueError):
+            Resolution.from_string(text)

@@ -123,6 +123,17 @@ class Resolution:
         """A simple <width>x<height> string representation"""
         return f"{self.width}x{self.height}"
 
+    @classmethod
+    def from_string(cls, text: str) -> "Resolution":
+        """Parses the <width>x<height> representation back
+
+        :raises ValueError: when the text is not a resolution
+        """
+        width, _, height = text.partition("x")
+        if not height:
+            raise ValueError(f"Not a resolution: {text!r}")
+        return cls(width=int(width), height=int(height))
+
     def __iter__(self):
         yield "width", self.width
         yield "height", self.height
@@ -464,7 +475,7 @@ class Camera:
                     value = DEFAULT_CAMERA_SETTINGS[
                         CapabilityType.TRIGGER_SCHEME.value]
             elif setting == CapabilityType.RESOLUTION.value:
-                value = Resolution(*(int(val) for val in src_value.split("x")))
+                value = Resolution.from_string(src_value)
             elif setting == CapabilityType.ROTATION.value:
                 value = int(src_value)
             elif setting == CapabilityType.EXPOSURE.value:
