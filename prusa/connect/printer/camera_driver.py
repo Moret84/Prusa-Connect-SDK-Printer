@@ -88,10 +88,21 @@ class CameraDriver:
         """Gets the configured resolution and validates it, if invalid gives
         the highest possible one"""
         highest_resolution = sorted(available_resolutions)[-1]
-        configured_resolution = config.get("resolution",
-                                           str(highest_resolution))
+        if "resolution" not in config:
+            return highest_resolution
+        try:
+            configured_resolution = Resolution.from_string(
+                config["resolution"])
+        except ValueError:
+            log.warning("Camera resolution %s is not a resolution, "
+                        "using %s instead", config["resolution"],
+                        highest_resolution)
+            return highest_resolution
         if configured_resolution not in available_resolutions:
-            configured_resolution = highest_resolution
+            log.warning("Camera resolution %s is not available, "
+                        "using %s instead", configured_resolution,
+                        highest_resolution)
+            return highest_resolution
         return configured_resolution
 
     @staticmethod
